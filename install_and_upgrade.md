@@ -31,8 +31,6 @@ Bundler 是工具名，而 bundle 是實際使用的命令；就像 Homebrew 是
 
 require 是 Ruby 內建的函數，用來加載標準庫或已安裝的 gems。 RubyGems 是 Ruby 的庫管系統，負責安裝、管理和查找 gems，而 require 只是載入程式碼的機制。 RubyGems 讓開發者可以輕鬆安裝和管理 gem，而不需要手動下載和管理 Ruby 庫路徑，所以的確比 require 方便。RubyGems 無法取代程序中的 require 函數，只是讓它的使用更方便和準確。
 
-
-
 ## Upgrade the Ruby environment of macOS with brew
 
 **Update Homebrew** to make sure it has the latest formulae for Ruby.&#x20;
@@ -107,6 +105,8 @@ export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
 
 ## Install or Upgrade Ruby with `rbenv`
 
+在使用rbenv更新 Ruby 版本前，要先用 brew 更新 rbenv，否则最新版的 ruby 可能不会列出来。
+
 ### Upgrade Ruby with `rbenv`
 
 ```bash
@@ -119,11 +119,6 @@ rbenv install -L
 # install a Ruby version:
 rbenv install 3.3.0
 rbenv install 3.4.0-preview2
-
-# make 3.3.0 the defaul version on macOS
-rbenv global 3.3.0
-
-=======
 
 # make 3.3.0 the defaul version on macOS
 rbenv global 3.3.0
@@ -264,6 +259,94 @@ It will require them while booting.
 
 After the gems have been installed, Bundler can help you update them when new versions become available. Bundler is also an easy way to create new gems.&#x20;
 
+
+
+
+
+## Install Rails
+
+==🚫 Avoid sudo gem install rails. Always install Rails in **user space** when using rbenv.== You **should NOT** use `sudo gem install rails` unless you are installing Rails system-wide and fully understand the implications. Instead, install Rails without `sudo`, using Bundler and rbenv.
+
+### Why You Should Avoid sudo
+
+**Permission Issues:** Installing gems with sudo means they will be placed in system directories (e.g., /usr/local/lib/ruby/gems). This can lead to permission conflicts when managing gems later.
+
+**Conflicts with rbenv:** ==If you are using rbenv, Ruby gems should be installed in your **user space** (~/.rbenv/versions/<ruby-version>/lib/ruby/gems), not system-wide.==
+
+**Security Risks:** Running sudo gives gems full system access, which is risky if a malicious gem is installed.
+
+### **The Correct Way to Install Rails**
+
+Using rbenv, follow these steps:
+
+1. **Ensure rbenv and ruby-build are updated**
+
+```bash
+rbenv install --list  # Check available Ruby versions
+rbenv install 3.4.2    # Ensure you're using the latest version
+rbenv global 3.4.2     # Set it as the default
+```
+
+2. **Install Bundler (if not already installed)**
+
+```bash
+gem install bundler
+```
+
+3. **Install Rails (without sudo)**
+
+```bash
+gem install rails
+```
+
+4. **Rehash rbenv (if necessary)**
+
+```bash
+rbenv rehash # Regenerate shims for all known Ruby executables
+```
+
+運行這個命令是必要的，否則系統識別不了 `rails` 。
+
+5. **Check Rails Installation**
+
+```bash
+rails -v
+```
+
+### What If You Already Used sudo?
+
+If you mistakenly installed Rails with sudo, it might cause permission problems. To fix it:
+
+1. Uninstall Rails and reset gem permissions:
+
+```bash
+sudo gem uninstall rails
+sudo rm -rf /usr/local/lib/ruby/gems/*
+sudo chown -R $(whoami) ~/.gem
+```
+
+2. Then, reinstall Rails **without** sudo using the steps above.
+
+### Where to install Rails
+
+If you want to create multiple Rails projects using the same Rails version, installing Rails globally is fine. If you work on multiple projects requiring different Rails versions, a global install might cause version conflicts.
+
+There is **no functional difference** in how `gem install rails` behaves when run in ~ (your home directory) versus inside a Rails project folder. 
+
+#### `gem install rails` in the Home Directory (~)
+
+If you run `gem install rails` in your home directory (or any non-Rails project directory), it installs the **latest** version of Rails **globally for your current Ruby version**, puts Rails in your GEM_HOME (likely `~/.rbenv/versions/3.4.2/lib/ruby/gems` if using rbenv), and makes `rails` available **system-wide** for the current Ruby version. If you later start a new Rails project, it will use this globally installed Rails version.
+
+#### `gem install rails` in a Rails Project Folder
+
+If you are inside a Rails project folder and run `gem install rails`,it **still installs Rails globally**, not just for that project. It does **not** modify Gemfile or Gemfile.lock of your project, and it has **no direct effect** on the project unless the project is already configured to use that version.
+
+#### Correct way to install Rails
+
+**For global installs** (e.g., when setting up a new development machine), `gem install rails` is fine.
+
+**For individual projects**, specify Rails in Gemfile and use `bundle install` to avoid conflicts.
+
 ## Upgrade a Rails app
 
 首先，最好先升級一下這個 Rails app 用的打包工具 Bundler。當然，這只是個幹活工具，不是是app本身的一部分。
@@ -318,7 +401,9 @@ Inside a Rails app's directory:
 bundle update rails
 ```
 
-Bundler will update the Rails gem to the latest version specified in the Gemfile, along with all its dependencies. ==But it does not make any changes to the configuration files, initializers, or other Rails-specific files in the app.== 做了這一步，只是把app需要的dependency的最新款，都搬運過來了而已，但是app還並沒有配置「啟用」它們。
+Bundler will update the Rails gem to the latest version specified in the Gemfile, along with all its dependencies. ==But it does not make any changes to the configuration files, initializers, or other Rails-specific files in the app.== 
+
+做了這一步，只是把app需要的dependency的最新款，都搬運過來了而已，但是app還並沒有配置「啟用」它們。
 
 **Step 2**: to make sure the app's configuration and boilerplate code are up-to-date with the new Rails version, by running:
 
@@ -380,3 +465,6 @@ gem "pg"
     bundle install
     ```
 
+
+
+`bundle exec` 確保當前 app 使用 Gemfile.lock 內指定的 gem 版本，而不是全局 RubyGems 內的版本。

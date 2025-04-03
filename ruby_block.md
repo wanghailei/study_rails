@@ -4,9 +4,9 @@
 
 If you have used `each` before, then you have used blocks!
 
-A code block is a chunk of code you can pass to a method, as if the code block were another parameter. 
+==A code block is a chunk of code you can pass to a method==, as if the code block were another parameter. 
 
-A code block is a set of Ruby statements and expressions inside braces or a do/end pair. 
+A code block is a set of Ruby statements and expressions inside braces or a `do ... end` pair. `{...}` is a block. `do ... end` is a block
 
 The block may start with an argument list between vertical bars. 
 
@@ -16,7 +16,38 @@ The block may start with an argument list between vertical bars.
 
 A block is useful because it allows you to save a bit of logic (code) & use it later.
 
-### Is a block of the "type" Proc?
+這麼說的話，感覺 block 像一張小卡片，上面記錄了一些好用的代碼片段或想法，一般是解決某一個小事兒、產生一個結果。所以它被傳來傳去，挺形象的。
+
+### `yield 呼叫`
+
+`yield` is a keyword that calls a block when you use it. It’s how methods **USE** blocks! When you use the `yield` keyword, the code inside the block will run to do its job, just like when you call a regular method.
+
+### Block as an Implicit Argument
+
+Notice that there’s no parameter explicitly passed to the ActionView helper method `capture` because Ruby allows you to pass a block as an implicit argument. 
+
+```ruby
+<% @greeting = capture do %>
+	<p>Welcome! The date and time is <%= Time.current %></p>
+<% end %>
+```
+
+In Ruby, when you write a method call followed by `do...end` or `{...}`, that block is automatically ==passed to the method as an implicit parameter==. There’s no need for an explicit parameter between the method name and the block, which is a common Ruby idiom for methods that work with blocks.
+
+### Blocks can be “explicit” or “implicit”. 
+
+Explicit means that you give it a name in the parameter list. You can pass an explicit block to another method or save it into a variable to use later.
+
+```ruby
+def broadcast( &work )
+     work.call # same as yield
+end
+broadcast { puts "Explicit block called" }
+```
+
+Notice the `&work` paramete. That’s how you ==define the block’s name==!
+
+## Is a block of the "type" Proc?
 
 In Ruby, a block is conceptually related to a `Proc` object, although they are not exactly the same. 
 
@@ -41,53 +72,7 @@ my_proc = Proc.new { |x| puts x }
 
 In this case, `my_proc` is a `Proc` object that encapsulates the block. ==The `&` operator is used to convert the `Proc` object back into a block== when passing it to the `each` method.
 
-In summary, while a block itself is not an object, a `Proc` is an object type that represents a block in Ruby, allowing for more flexibility in how the block is used.
-
-
-
-Blocks can be “explicit” or “implicit”. Explicit means that you give it a name in the parameter list. You can pass an explicit block to another method or save it into a variable to use later.
-
-```ruby
-def broadcast( &work )
-     work.call # same as yield
-end
-broadcast { puts "Explicit block called" }
-```
-
-Notice the `&work` paramete. That’s how you define the block’s name!
-
-{...} is a block. do ... end is a block
-
-==While blocks are a key part of Ruby, they are not objects until converted into a Proc or Lambda.==
-
-### `yield`
-
-`yield` is a keyword that calls a block when you use it. It’s how methods **USE** blocks!
-
-When you use the `yield` keyword, the code inside the block will run to do its job, just like when you call a regular method.
-
-## Lambda
-
-A lambda is a way to define a block and its parameters with some special syntax. You can save this lambda into a variable for later use.
-
-A **Lambda** is created with ==`lambda {}`== or `-> {}`.
-
-```ruby
-say_something = -> { puts "This is a lambda." }
-# Or construct a proc with lambda semantics using the Kernel#lambda method.
-talk_anything = lambda { puts "This is also a lambda." } 
-```
-
-Defining a lambda won’t run the code inside it, just like defining a method won’t run the method, you need to use the `call` method for that.
-
-### What is a lambda in general?
-
-In general programming concepts, a lambda is ==a type of anonymous function==. The term originates from lambda calculus, a formal system in mathematical logic. 
-
-1. **Anonymous**: Lambda functions are usually anonymous, meaning they don't have a name like traditional functions. This makes them convenient for ==short, throwaway functions== that are used only in a particular context.
-2. **Concise Syntax**: Lambdas typically have a more concise syntax compared to regular functions, making them ==easier to read and write for small functionalities==.
-3. **Immediate Execution**: ==Unlike regular functions, lambdas can be executed immediately at the place where they are defined.==
-4. **Closure**: ==Lambdas often form closures==, meaning they can capture and use variables from their enclosing scope. This makes them powerful for various programming patterns, such as callbacks, event handlers, and short-lived operations that require some local state.
+In summary, while a block itself is not an object, a `Proc` is an object type that represents a block in Ruby, allowing for more flexibility in how the block is used. ==While blocks are a key part of Ruby, they are not objects until converted into a Proc or Lambda.==
 
 ## Proc
 
@@ -116,6 +101,29 @@ Lambdas are generally preferred when you need function-like behavior, while Proc
 These differences can lead to different behaviors in code. 
 
 **Semantic Differences**: Ruby differentiates between `Proc` and `Lambda` for subtle but important reasons related to how they handle arguments and return values. This distinction allows programmers to choose the behavior that best suits their needs, which would be less clear with a generic `Function` class.
+
+## Lambda
+
+==A lambda is a way to define a block== and its parameters with some special syntax. You can save this lambda into a variable for later use.
+
+A **Lambda** is created with ==`lambda {}`== or `-> {}`.
+
+```ruby
+say_something = -> { puts "This is a lambda." }
+# Or construct a proc with lambda semantics using the Kernel#lambda method.
+talk_anything = lambda { puts "This is also a lambda." } 
+```
+
+Defining a lambda won’t run the code inside it, just like defining a method won’t run the method, you need to use the `call` method for that.
+
+### What is a lambda in general?
+
+In general programming concepts, a lambda is ==a type of anonymous function==. The term originates from lambda calculus, a formal system in mathematical logic. 
+
+1. **Anonymous**: Lambda functions are usually anonymous, meaning they don't have a name like traditional functions. This makes them convenient for ==short, throwaway functions== that are used only in a particular context.
+2. **Concise Syntax**: Lambdas typically have a more concise syntax compared to regular functions, making them ==easier to read and write for small functionalities==.
+3. **Immediate Execution**: ==Unlike regular functions, lambdas can be executed immediately at the place where they are defined.==
+4. **Closure**: ==Lambdas often form closures==, meaning they can capture and use variables from their enclosing scope. This makes them powerful for various programming patterns, such as callbacks, event handlers, and short-lived operations that require some local state.
 
 ## Are the purpose of existing for a Proc or Lambda just for encapsulating a block?
 
